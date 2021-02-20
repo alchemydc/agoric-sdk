@@ -61,3 +61,10 @@ bundle-*.js
 .idea/
 
 /packages.png
+
+# vscode
+*.code-workspace
+
+*.env
+!agoric-template.env
+/validator-tools/scratch
