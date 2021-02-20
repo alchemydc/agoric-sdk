@@ -60,8 +60,10 @@ EOF
 sudo systemctl enable ag-chain-cosmos
 sudo systemctl start ag-chain-cosmos
 
-# see sync status
+#start it manually from console
+ag-chain-cosmos start --log_level=warn
 
+# see sync status
 #ag-cosmos-helper status 2>&1 | jq .SyncInfo
 ag-cosmos-helper status 2>&1 | jq .
 
