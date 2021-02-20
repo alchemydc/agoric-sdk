@@ -44,10 +44,13 @@ async function runTest(
   const byStatus = { ok: 0, 'not ok': 0, SKIP: 0 };
 
   async function handleCommand(message) {
-    /** @type { TapMessage | { bundleSource: unknown[] } } */
+    /** @type { TapMessage | { bundleSource: unknown[] } | { message: string } } */
     const msg = JSON.parse(decoder.decode(message));
     // console.log(input, msg, qty, byStatus);
 
+    if ('message' in msg) {
+      throw msg;
+    }
     if ('bundleSource' in msg) {
       const bundle = await bundleSource(...msg.bundleSource);
       return encoder.encode(JSON.stringify(bundle));
@@ -89,7 +92,7 @@ async function runTest(
     const require = function require(specifier) {
       switch(specifier) {
         case 'ava':
-          return (label, run) => test(label, run, harness);
+          return test;
         case '@agoric/install-ses':
           return undefined;
         case '@agoric/bundle-source':
@@ -111,7 +114,9 @@ async function runTest(
         TextEncoder, TextDecoder,
       });
       c.evaluate(\`(\${src}\\n)()\`);
-      harness.result().then(send);
+      harness.result()
+        .then(send)
+        .catch(ex => send({ message: ex.message}));
     }
     globalThis.handleCommand = handler;
     `,

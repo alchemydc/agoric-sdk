@@ -130,8 +130,11 @@ let theHarness = null; // ISSUE: ambient
 function createHarness(send) {
   let testNum = 0;
   let passCount = 0;
+  /** @type {((ot: { context: Object }) => Promise<void>)[]} */
+  let beforeHooks = [];
   /** @type {(() => Promise<void>)[]} */
   let suitesToRun = [];
+  const context = {};
 
   function summary() {
     return {
@@ -141,15 +144,14 @@ function createHarness(send) {
     };
   }
 
-  async function runDeferredSuites() {
-    for await (const suite of suitesToRun) {
-      await suite();
-    }
-    suitesToRun = [];
-  }
-
   const it = freeze({
     send,
+    get context() {
+      return context;
+    },
+    before(_label, hook) {
+      beforeHooks.push(hook);
+    },
     finish(/** @type { boolean } */ ok) {
       testNum += 1;
       if (ok) {
@@ -162,7 +164,15 @@ function createHarness(send) {
     },
     summary,
     async result() {
-      await runDeferredSuites();
+      for await (const hook of beforeHooks) {
+        await hook({ context });
+      }
+      beforeHooks = [];
+      for await (const suite of suitesToRun) {
+        await suite();
+      }
+      suitesToRun = [];
+
       return summary();
     },
   });
@@ -225,6 +235,9 @@ function makeTester(htest, out) {
   const t = freeze({
     plan(/** @type {number} */ _count) {
       // TODO
+    },
+    get context() {
+      return htest.context;
     },
     pass(/** @type {string} */ message) {
       assert(true, message);
@@ -324,6 +337,13 @@ function test(label, run, htestOpt) {
 // TODO: test.skip, test.failing
 
 test.createHarness = createHarness;
+
+/** @type {(l: string, fn: () => Promise<void>) => void} */
+test.before = (label, fn) => {
+  if (!theHarness) throw Error('no harness');
+  theHarness.before(label, fn);
+};
+
 freeze(test);
 
 // export default test;
