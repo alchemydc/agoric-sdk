@@ -87,38 +87,6 @@ function tapFormat(send) {
   });
 }
 
-// eslint-disable-next-line jsdoc/require-returns-check
-/**
- * @param {boolean} _flag
- * @returns {asserts _flag}
- */
-function believeMe(_flag) {}
-
-/**
- * @template T
- * @typedef {{
- *   resolve(value?: T | Promise<T>): void,
- *   reject(error: Error): void,
- *   promise: Promise<T>
- * }} Deferred
- */
-
-/**
- * @template T
- * @returns {Deferred<T>}
- */
-function defer() {
-  let resolve;
-  let reject;
-  const promise = new Promise((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  believeMe(resolve !== undefined);
-  believeMe(reject !== undefined);
-  return { promise, resolve, reject };
-}
-
 /** @type { Harness | null } */
 let theHarness = null; // ISSUE: ambient
 
